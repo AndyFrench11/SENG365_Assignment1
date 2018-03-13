@@ -1,9 +1,16 @@
 const User = require("../models/user.server.model");
 
 exports.userById = function(req, res) {
-    let id = req.params.userId;
-    User.getSingleUser(id, function(result) {
-        res.json(result);
+    let userId = req.params.userId;
+    User.getSingleUser(userId, function(result, error) {
+        if(error){
+            res.statusMessage = "Not found";
+            res.status(404).send(`The user with id ${userId} cannot be found.`);
+        } else {
+            res.statusMessage = "OK";
+            res.status(200).json(result);
+        }
+
     });
 };
 
@@ -30,9 +37,16 @@ exports.create = function(req, res) {
         [password]
     ];
 
-    User.insert(values, function(result) {
-        res.json(result);
-        //res.writeHeader(200);
+    User.insert(values, function(result, error) {
+        if(error) {
+            res.statusMessage = "Malformed Request";
+            res.status(400).send("Malformed Request: Could not create user");
+        } else {
+            res.statusMessage = "OK";
+            res.status(201).json({
+                "id": result["insertId"]
+            });
+        }
     });
 };
 

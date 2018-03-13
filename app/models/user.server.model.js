@@ -1,10 +1,11 @@
 const db = require("../../config/db");
 
 exports.getSingleUser = function(userId, done) {
-    db.get_pool().query("SELECT * FROM auction_user WHERE user_id = ?", userId,
+    db.get_pool().query("SELECT user_username AS username, user_givenname AS givenName, user_familyname AS familyName," +
+        "user_email AS email, user_accountbalance AS accountBalance FROM auction_user WHERE user_id = ?", userId,
         function(err, rows){
-            if(err) return done({"ERROR": "Error selecting a single user"});
-            return done(rows);
+            if((err) || (rows.length == 0)) return done(err, true);
+            return done(rows, false);
         });
 };
 
@@ -13,11 +14,9 @@ exports.insert = function(values, done) {
         " user_password)  VALUES (?, ?, ?, ?, ?)", values,
         function(err, rows) {
             if(err) {
-                console.log(err);
-                return done({"ERROR": "Error inserting user into database"});
+                return done(err, true);
             }
-
-            return done(rows);
+            return done(rows, false);
         });
 };
 
