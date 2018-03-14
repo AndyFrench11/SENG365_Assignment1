@@ -44,7 +44,7 @@ exports.updatePhoto = function(values, done) {
 };
 
 exports.deletePhoto = function(auction_id, photo_id, done) {
-    db.get_pool().query(`DELETE FROM photo WHERE photo_id = ${photo_id} AND photo_auctionid = ${auction_id}`,
+    db.get_pool().query(`DELETE FROM photo WHERE photo_auctionid = ${auction_id}`,
         function(err, rows) {
             if(err) {
                 return done(err, true);

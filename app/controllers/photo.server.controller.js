@@ -87,8 +87,7 @@ exports.updatePhotoFromAuction = function(req, res) {
 
 exports.deleteAuctionPhoto = function(req, res) {
     let auction_id = req.params.auctionId;
-    let photo_id = req.params.photoId;
-    Photo.deletePhoto(auction_id, photo_id, function(result) {
+    Photo.deletePhoto(auction_id, function(result) {
         res.statusMessage = "OK";
         res.status(201).send(`Photo (id: ${photo_id}) successfully deleted from auction id: ${auction_id}`);
     });
