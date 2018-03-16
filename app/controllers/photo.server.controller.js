@@ -1,4 +1,5 @@
 const Photo = require("../models/photo.server.model");
+const fs = require("fs");
 
 exports.getAllPhotosFromAuction = function(req, res) {
     let auctionId = req.params.auctionId;
@@ -43,6 +44,9 @@ exports.addPhotoToAuction = function(req, res) {
 exports.getSinglePhotoFromAuction = function(req, res) {
     let auction_id = req.params.auctionId;
     let photo_id = req.params.photoId;
+
+    //req.pipe(fs.createWriteStream("../photos"));
+
     Photo.getSinglePhoto(auction_id, photo_id, function(result, error) {
         if(error) {
             res.statusMessage = "Not found";
