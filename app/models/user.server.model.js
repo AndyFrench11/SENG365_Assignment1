@@ -114,20 +114,29 @@ exports.getUserToken = function(token, done) {
 
 };
 
-exports.getUserId = function(token, userId, done) {
+exports.getUserIdCheck = function(token, userId, done) {
     let sql = `SELECT user_id FROM auction_user WHERE user_token = "${token}"`;
     db.get_pool().query(sql,
         function(err, rows) {
             if((err) || (rows.length == 0)) {
                 return done(err, 500);
             }
-            console.log(userId);
-            console.log(rows[0].user_id);
             if(userId == rows[0].user_id) {
                 return done(rows, 200);
             } else {
                 return done(err, 500);
             }
+        });
+};
+
+exports.getUserIdFromToken = function(token, done) {
+    let sql = `SELECT user_id FROM auction_user WHERE user_token = "${token}"`;
+    db.get_pool().query(sql,
+        function(err, rows) {
+            if((err) || (rows.length == 0)) {
+                return done(err, 500);
+            }
+                return done(rows[0].user_id, 200);
         });
 };
 

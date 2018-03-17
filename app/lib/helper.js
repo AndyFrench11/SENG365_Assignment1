@@ -16,7 +16,7 @@ exports.checkAuthenticated = function(req, res, done) {
 
 exports.checkIsUser = function(userId, req, res, done) {
     let token = req.header("X-Authorization");
-    users.getUserId(token, userId, function(result, errorCode) {
+    users.getUserIdCheck(token, userId, function(result, errorCode) {
         if(errorCode == 200) {
             done(true);
         } else {
