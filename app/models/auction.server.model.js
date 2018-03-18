@@ -1,7 +1,83 @@
 const db = require("../../config/db");
 
-exports.getAll = function(done) {
-    //TODO Yet to be implemented
+exports.getAll = function(parameterValues, done) {
+    let sql = "SELECT " +
+        "auction_id AS id, " +
+        "category.category_title AS categoryTitle, " +
+        "auction_categoryid AS categoryId, " +
+        "auction_title AS title, " +
+        "auction_reserveprice AS reservePrice, " +
+        "auction_startingdate AS startDateTime, " +
+        "auction_endingdate AS endDateTime, " +
+        "bid.bid_amount AS currentBid ";
+
+    sql += "FROM auction ";
+
+    sql += "JOIN category ON category.category_id=auction.auction_categoryid ";
+    sql += "LEFT OUTER JOIN bid ON auction.auction_id=bid.bid_auctionid ";
+
+    //sql += "JOIN (SELECT bid.bid_auctionid, MAX(bid.bid_amount) AS maxBid " +
+        //"FROM bid) as NewBid " +
+        //"ON bid.bid_auctionid = NewBid.bid_auctionid AND bid.bid_amount = NewBid.maxBid ";
+
+
+    //TODO CREATE CHECK FOR CURRENT BID
+    sql += "WHERE 1 ";
+
+    if(parameterValues.q) {
+        sql += ` AND auction_title LIKE '%${parameterValues.q}%' `;
+    }
+    if(parameterValues['category-id']) {
+        sql += ` AND auction_categoryid = ${parameterValues['category-id']} `;
+
+    }
+    if(parameterValues.seller) {
+
+        sql += ` AND auction_userid = ${parameterValues.seller} `;
+    }
+
+    if(parameterValues.bidder) {
+
+        sql += ` AND bid.bid_userid = ${parameterValues.bidder} `;
+
+    }
+
+    if(parameterValues.winner) {
+
+        //TODO Add in check for max bid
+        let currentDate = Date.now();
+        sql += ` AND auction_endingdate < ${currentDate} AND bid.bid_datetime = (SELECT t2.bid_dateTime FROM bid t2 JOIN bid WHERE t2.bid_datetime = (SELECT MAX(bid_datetime) AS maxDate FROM bid t3 WHERE t3.bid_userid = ${parameterValues.winner})) `;
+
+    }
+
+    sql += "ORDER BY endDateTime DESC";
+
+
+    if(parameterValues.count) {
+        sql += ` LIMIT ${parameterValues.count}`;
+    } else {
+        sql += ` LIMIT 1000000000000000`;
+    }
+
+    if(parameterValues.startIndex) {
+        sql += ` OFFSET ${parameterValues.startIndex}`;
+    }
+
+    console.log(sql);
+    db.get_pool().query(sql,
+        function(err, rows) {
+            if(err) {
+                console.log(err);
+                return done(err, 500)
+            }
+
+            if(rows.length == 0) {
+                return done("Bad request: There are no auctions currently created.", 400);
+            }
+
+            return done(rows, 200);
+        });
+
 };
 
 exports.create = function(values, done) {
@@ -12,7 +88,7 @@ exports.create = function(values, done) {
             if(err) {
                 return done(err, 400);
             }
-            let sql = "SELECT auction_id FROM auction WHERE auction_categoryid = ? AND auction_title = ? AND " +
+            let sql = "SELECT MAX(auction_id) AS auction_id FROM auction WHERE auction_categoryid = ? AND auction_title = ? AND " +
                 "auction_description = ? AND auction_startingdate = ? AND auction_endingdate = ? AND " +
                 "auction_reserveprice = ? AND auction_startingprice = ? AND auction_userid = ?";
             db.get_pool().query(sql, values,
@@ -20,6 +96,7 @@ exports.create = function(values, done) {
                     if((err) || (rows.length == 0)) {
                         return done(err, 500);
                     }
+                    console.log(rows);
                     let auction_id = rows[0].auction_id;
                     return done({
                         "id": auction_id
@@ -112,12 +189,11 @@ exports.getSingleAuction = function(auctionId, done) {
                                     console.log(err);
                                     return done(err, 500);
                                 }
-                                
+
                                 //Get values out
 
                                 if(rows[0].maxBid == null) {
-                                    let startingBid = resultValues["startingBid"];
-                                    resultValues["currentBid"] = startingBid;
+                                    resultValues["currentBid"] = null;
                                 } else {
                                     resultValues["currentBid"] = rows[0].maxBid;
                                 }

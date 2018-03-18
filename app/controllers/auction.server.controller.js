@@ -3,8 +3,19 @@ const lib = require("../lib/helper");
 const User = require("../models/user.server.model");
 
 exports.getAllAuctions = function(req, res) {
-    //TODO Yet to be implemented
-    Auction.getAll();
+
+    Auction.getAll(req.query, function(result, errorCode) {
+        if(errorCode == 200) {
+            res.statusMessage = "OK";
+            res.status(200).json(result);
+        } else if(errorCode == 400) {
+            res.statusMessage = "Bad request";
+            res.status(400).send(result);
+        } else if(errorCode == 500) {
+            res.statusMessage = "Internal server error";
+            res.status(500).send("Internal server error: An error took place retrieving information from the server.")
+        }
+    });
 };
 
 exports.createAuction = function(req, res) {
