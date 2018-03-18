@@ -6,7 +6,7 @@ module.exports = function(app) {
         .post(auctions.createAuction);
 
     app.route('/api/v1/auctions/:auctionId')
-        .get(auctions.getSingleAuction)
+        .get(auctions.getAuction)
         .patch(auctions.updateInformationOnAuction);
 
     app.route('/api/v1/auctions/:auctionId/bids')

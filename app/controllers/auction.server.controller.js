@@ -71,16 +71,94 @@ exports.createAuction = function(req, res) {
 
 };
 
-exports.getSingleAuction = function(req, res) {
+exports.getAuction = function(req, res) {
     let auctionId = req.params.auctionId;
-    Auction.getSingleOne(auctionId, function(result) {
-        res.json(result);
+    Auction.getSingleAuction(auctionId, function(result, errorCode) {
+        if(errorCode == 200) {
+            res.statusMessage = "OK";
+            res.status(200).send(result);
+        } else if(errorCode == 400) {
+            res.statusMessage = "Bad request";
+            res.status(400).send(result);
+        } else if(errorCode == 404) {
+            res.statusMessage = "Not found";
+            res.status(404).send(`Not found: The auction with id ${auctionId}`);
+        } else if(errorCode == 500) {
+            res.statusMessage = "Internal server error";
+            res.status(500).send("Internal server error: There was a problem getting information from the server.");
+        }
     });
 };
 
 exports.updateInformationOnAuction = function(req, res) {
-    //TODO Yet to be implemented
-    Auction.updateInformation();
+    let auctionId = req.params.auctionId;
+    lib.checkAuthenticated(req, res, function(isAuthenticated) {
+        if(isAuthenticated) {
+
+            let values = {};
+
+            if(req.body.categoryId) {
+                values["auction_categoryid"] = req.body.categoryId;
+            }
+
+            if(req.body.title) {
+                values["auction_title"] = req.body.title;
+            }
+
+            if(req.body.description) {
+                values["auction_description"] = req.body.description;
+            }
+
+            if(req.body.startDateTime) {
+                values["auction_startingdate"] = req.body.startDateTime;
+            }
+
+            if(req.body.endDateTime) {
+                values["auction_endingdate"] = req.body.endDateTime;
+            }
+
+            if(req.body.reservePrice) {
+                values["auction_reserveprice"] = req.body.reservePrice;
+            }
+
+            if(req.body.startingBid) {
+                values["auction_startingprice"] = req.body.startingBid;
+            }
+
+            let token = req.header("X-Authorization");
+            User.getUserIdFromToken(token, function (userId, errorCode) {
+                if (errorCode == 500) {
+                    res.statusMessage = "Internal server error.";
+                    res.status(500).send(`Internal Server Error: A problem occurred getting information from the database.`);
+                } else {
+                    Auction.updateInformation(auctionId, userId, values, function(result, errorCode) {
+                        if(errorCode == 201) {
+                            res.statusMessage = "OK";
+                            res.status(201).send(`Successfully updated auction with id ${auctionId}`);
+                        } else if(errorCode == 400) {
+                            res.statusMessage = "Bad request";
+                            res.status(400).send(result);
+                        } else if(errorCode == 403) {
+                            res.statusMessage = "Forbidden";
+                            res.status(403).send("Forbidden - bidding has begun on the auction");
+                        } else if(errorCode == 404) {
+                            res.statusMessage = "Not found";
+                            res.status(404).send(`Not found: The auction with id ${auctionId} could not be found`);
+                        } else if(errorCode == 500) {
+                            res.statusMessage = "Internal server error";
+                            res.status(500).send("Internal Server Error: There was a problem updating information in the database");
+                        }
+
+                    });
+
+                }
+            });
+
+        } else {
+            res.statusMessage = "Unauthorized";
+            res.status(401).send("You are unauthorized to access this data.")
+        }
+    });
 };
 
 exports.getBidsForSingleAuction = function(req, res) {
