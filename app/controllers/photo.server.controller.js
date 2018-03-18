@@ -17,6 +17,9 @@ const User = require("../models/user.server.model");
 // };
 
 exports.addPhotoToAuction = function(req, res) {
+
+    //TODO check for default photo
+
     lib.checkAuthenticated(req, res, function(isAuthenticated) {
         if(isAuthenticated === true) {
             let auction_id = req.params.auctionId;
@@ -29,7 +32,7 @@ exports.addPhotoToAuction = function(req, res) {
                     Photo.addPhoto(user_id, auction_id, function (result, errorCode) {
                         if (errorCode == 404) {
                             res.statusMessage = "Not found";
-                            res.status(404).send(`Not found: Could not find photo in auction ${auction_id}`);
+                            res.status(404).send(`Not found: Could not find photo to add to auction ${auction_id}`);
                         } else if (errorCode == 201) {
                             req.pipe(fs.createWriteStream(`./app/photos/${auction_id}.png`));
                             res.statusMessage = "OK";

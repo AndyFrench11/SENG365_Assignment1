@@ -84,11 +84,60 @@ exports.updateInformationOnAuction = function(req, res) {
 };
 
 exports.getBidsForSingleAuction = function(req, res) {
-    //TODO Yet to be implemented
-    Auction.getBids();
+    let auctionId = req.params.auctionId;
+    Auction.getBids(auctionId, function(result, errorCode) {
+        if(errorCode == 200) {
+            res.statusMessage = "OK";
+            res.status(200).json(result);
+        } else if(errorCode == 400) {
+            res.statusMessage = "Bad Request.";
+            res.status(400).send("Bad request: A bad request was sent from the user.");
+        } else if (errorCode == 404) {
+            res.statusMessage = "Not found";
+            res.status(404).send(`Not found: Auction with id: ${auctionId} was not found`);
+        } else if(errorCode == 500) {
+            res.statusMessage = "Internal Server Error";
+            res.status(500).send("Internal server error: A problem occured getting information from the server.");
+        }
+    });
 };
 
 exports.makeBidForSingleAuction = function(req, res) {
-    //TODO Yet to be implemented
-    Auction.makeBid();
+    lib.checkAuthenticated(req, res, function(isAuthenticated) {
+        if(isAuthenticated) {
+
+            let auctionId = req.params.auctionId;
+            let amount = req.query.amount;
+            let token = req.header("X-Authorization");
+            User.getUserIdFromToken(token, function (user_id, errorCode) {
+                if (errorCode == 500) {
+                    res.statusMessage = "Internal server error.";
+                    res.status(500).send(`Internal Server Error: A problem occurred getting information from the database.`);
+                } else {
+
+                    Auction.makeBid(auctionId, user_id, amount, function(result, errorCode) {
+                        if(errorCode == 201) {
+                            res.statusMessage = "OK";
+                            res.status(201).send(`Bid of $${amount} successfully made on auction with id: ${auctionId} by user id: ${user_id}`);
+                        } else if(errorCode == 400) {
+                            res.statusMessage = "Bad Request";
+                            res.status(400).send(result);
+                        } else if(errorCode == 404) {
+                            res.statusMessage = "Not found";
+                            res.status(404).send("Not found: An auction with this id was not found.");
+                        } else if(errorCode == 500) {
+                            res.statusMessage = "Internal Server Error";
+                            res.status(500).send("Internal Server Error: A problem occurred at the database level.");
+                        }
+                    });
+                }
+            });
+
+
+        } else {
+            res.statusMessage = "Unauthorized";
+            res.status(401).send("You are unauthorized to access this data.")
+        }
+    });
+
 };
