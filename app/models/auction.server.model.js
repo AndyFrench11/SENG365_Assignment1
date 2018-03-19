@@ -2,19 +2,19 @@ const db = require("../../config/db");
 
 exports.getAll = function(parameterValues, done) {
     let sql = "SELECT " +
-        "auction_id AS id, " +
+        "DISTINCT auction_id AS id, " +
         "category.category_title AS categoryTitle, " +
         "auction_categoryid AS categoryId, " +
         "auction_title AS title, " +
         "auction_reserveprice AS reservePrice, " +
         "auction_startingdate AS startDateTime, " +
         "auction_endingdate AS endDateTime, " +
-        "bid.bid_amount AS currentBid ";
+        "MAX(bid.bid_amount) AS currentBid ";
 
     sql += "FROM auction ";
 
     sql += "JOIN category ON category.category_id=auction.auction_categoryid ";
-    sql += "LEFT OUTER JOIN bid ON auction.auction_id=bid.bid_auctionid ";
+    sql += "LEFT JOIN bid ON auction.auction_id=bid.bid_auctionid ";
 
     //sql += "JOIN (SELECT bid.bid_auctionid, MAX(bid.bid_amount) AS maxBid " +
         //"FROM bid) as NewBid " +
@@ -42,15 +42,15 @@ exports.getAll = function(parameterValues, done) {
 
     }
 
-    if(parameterValues.winner) {
+    // if(parameterValues.winner) {
+    //
+    //     //TODO Add in check for max bid
+    //     let currentDate = Date.now();
+    //     sql += ` AND auction_endingdate < ${currentDate} AND bid.bid_datetime = (SELECT t2.bid_dateTime FROM bid t2 JOIN bid WHERE t2.bid_datetime = (SELECT MAX(bid_datetime) AS maxDate FROM bid t3 WHERE t3.bid_userid = ${parameterValues.winner})) `;
+    //
+    // }
 
-        //TODO Add in check for max bid
-        let currentDate = Date.now();
-        sql += ` AND auction_endingdate < ${currentDate} AND bid.bid_datetime = (SELECT t2.bid_dateTime FROM bid t2 JOIN bid WHERE t2.bid_datetime = (SELECT MAX(bid_datetime) AS maxDate FROM bid t3 WHERE t3.bid_userid = ${parameterValues.winner})) `;
-
-    }
-
-    sql += "ORDER BY endDateTime DESC";
+    sql += "GROUP BY id ORDER BY endDateTime DESC";
 
 
     if(parameterValues.count) {
