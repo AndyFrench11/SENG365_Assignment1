@@ -25,5 +25,4 @@ exports.checkIsUser = function(userId, req, res, done) {
     });
 
 
-
 };

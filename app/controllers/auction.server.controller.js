@@ -1,13 +1,14 @@
 const Auction = require("../models/auction.server.model");
 const lib = require("../lib/helper");
 const User = require("../models/user.server.model");
+const datetime = require('node-datetime');
 
 exports.getAllAuctions = function(req, res) {
 
     Auction.getAll(req.query, function(result, errorCode) {
         if(errorCode == 200) {
             res.statusMessage = "OK";
-            res.status(200).json(result);
+            res.status(200).send(result);
         } else if(errorCode == 400) {
             res.statusMessage = "Bad request";
             res.status(400).send(result);
@@ -46,6 +47,10 @@ exports.createAuction = function(req, res) {
                     let reservePrice = auction_data['reservePrice'].toString();
                     let startingBid = auction_data['startingBid'].toString();
 
+                    let currentDate = datetime.create().format("Y-m-d H:M:S");
+                    console.log(currentDate);
+
+
                     let values = [
                         [categoryId],
                         [title],
@@ -54,7 +59,8 @@ exports.createAuction = function(req, res) {
                         [endDateTime],
                         [reservePrice],
                         [startingBid],
-                        [user_id]
+                        [user_id],
+                        [currentDate]
                     ];
 
                     Auction.create(values, function (result, errorCode) {
@@ -63,7 +69,7 @@ exports.createAuction = function(req, res) {
                             res.status(201).send(result);
                         } else if (errorCode == 400) {
                             res.statusMessage = "Bad request.";
-                            res.status(400).send("Bad request: This auction may already exist.");
+                            res.status(400).send(result);
                         } else if (errorCode == 500) {
                             res.statusMessage = "Internal Server Error";
                             res.status(500).send("Internal Server Error: There was a problem creating an auction on the server.");
@@ -93,7 +99,7 @@ exports.getAuction = function(req, res) {
             res.status(400).send(result);
         } else if(errorCode == 404) {
             res.statusMessage = "Not found";
-            res.status(404).send(`Not found: The auction with id ${auctionId}`);
+            res.status(404).send(`Not found: The auction with id ${auctionId} was not found.`);
         } else if(errorCode == 500) {
             res.statusMessage = "Internal server error";
             res.status(500).send("Internal server error: There was a problem getting information from the server.");
@@ -121,11 +127,15 @@ exports.updateInformationOnAuction = function(req, res) {
             }
 
             if(req.body.startDateTime) {
-                values["auction_startingdate"] = req.body.startDateTime;
+                let startDate = new Date(parseInt(req.body.startDateTime));
+                startDate = datetime.create(startDate).format('Y-m-d H:M:S');
+                values["auction_startingdate"] = startDate;
             }
 
             if(req.body.endDateTime) {
-                values["auction_endingdate"] = req.body.endDateTime;
+                let endDate = new Date(parseInt(req.body.endDateTime));
+                endDate = datetime.create(endDate).format('Y-m-d H:M:S');
+                values["auction_endingdate"] = endDate;
             }
 
             if(req.body.reservePrice) {
@@ -177,13 +187,13 @@ exports.getBidsForSingleAuction = function(req, res) {
     Auction.getBids(auctionId, function(result, errorCode) {
         if(errorCode == 200) {
             res.statusMessage = "OK";
-            res.status(200).json(result);
+            res.status(200).send(result);
         } else if(errorCode == 400) {
             res.statusMessage = "Bad Request.";
             res.status(400).send("Bad request: A bad request was sent from the user.");
         } else if (errorCode == 404) {
             res.statusMessage = "Not found";
-            res.status(404).send(`Not found: Auction with id: ${auctionId} was not found`);
+            res.status(404).send(`Not found: Bids on auction with id ${auctionId} were not found`);
         } else if(errorCode == 500) {
             res.statusMessage = "Internal Server Error";
             res.status(500).send("Internal server error: A problem occured getting information from the server.");

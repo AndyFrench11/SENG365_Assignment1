@@ -1,4 +1,5 @@
 const db = require("../../config/db");
+const datetime = require('node-datetime');
 
 exports.getAll = function(parameterValues, done) {
     let sql = "SELECT " +
@@ -16,12 +17,6 @@ exports.getAll = function(parameterValues, done) {
     sql += "JOIN category ON category.category_id=auction.auction_categoryid ";
     sql += "LEFT JOIN bid ON auction.auction_id=bid.bid_auctionid ";
 
-    //sql += "JOIN (SELECT bid.bid_auctionid, MAX(bid.bid_amount) AS maxBid " +
-        //"FROM bid) as NewBid " +
-        //"ON bid.bid_auctionid = NewBid.bid_auctionid AND bid.bid_amount = NewBid.maxBid ";
-
-
-    //TODO CREATE CHECK FOR CURRENT BID
     sql += "WHERE 1 ";
 
     if(parameterValues.q) {
@@ -42,14 +37,6 @@ exports.getAll = function(parameterValues, done) {
 
     }
 
-    // if(parameterValues.winner) {
-    //
-    //     //TODO Add in check for max bid
-    //     let currentDate = Date.now();
-    //     sql += ` AND auction_endingdate < ${currentDate} AND bid.bid_datetime = (SELECT t2.bid_dateTime FROM bid t2 JOIN bid WHERE t2.bid_datetime = (SELECT MAX(bid_datetime) AS maxDate FROM bid t3 WHERE t3.bid_userid = ${parameterValues.winner})) `;
-    //
-    // }
-
     sql += "GROUP BY id ORDER BY endDateTime DESC";
 
 
@@ -68,26 +55,55 @@ exports.getAll = function(parameterValues, done) {
         function(err, rows) {
             if(err) {
                 console.log(err);
-                return done(err, 500)
+                return done("Bad request: Please enter valid inputs.", 400)
             }
 
             if(rows.length == 0) {
-                return done("Bad request: There are no auctions currently created.", 400);
+                return done("Bad request: There are no auctions currently created with the given parameters.", 400);
+            } else {
+                let auctionList = [];
+                for (let i = 0; i < rows.length; i++) {
+                    let auction = {
+                        "id": rows[i].id,
+                        "categoryTitle": rows[i].categoryTitle,
+                        "categoryId": rows[i].categoryId,
+                        "title": rows[i].title,
+                        "reservePrice": rows[i].reservePrice,
+                        "startDateTime": Date.parse(rows[i].startDateTime),
+                        "endDateTime": Date.parse(rows[i].endDateTime),
+                        "currentBid": rows[i].currentBid
+                    };
+                    auctionList[i] = auction;
+                    return done(auctionList, 200);
+                }
             }
 
-            return done(rows, 200);
+
         });
 
 };
 
 exports.create = function(values, done) {
+
+    if(values[3] > values[4]) {
+        return done("Bad request: The end date time of the auction must be after the start date time", 400)
+    } else if(values[4] < Date.parse(values[8])) {
+        return done("Bad request: The end date time of the auction must be after the current date time", 400)
+    }
+    let startDate = new Date(parseInt(values[3]));
+    startDate = datetime.create(startDate).format('Y-m-d H:M:S');
+    let endDate = new Date(parseInt(values[4]));
+    endDate = datetime.create(endDate).format('Y-m-d H:M:S');
+    values[3] = [startDate];
+    values[4] = [endDate];
     db.get_pool().query("INSERT INTO auction (auction_categoryid, auction_title, auction_description, auction_startingdate," +
-        " auction_endingdate, auction_reserveprice, auction_startingprice, auction_userid)  VALUES (?, ?, ?, ?, ?, ?, ?, ?)", values,
+        " auction_endingdate, auction_reserveprice, auction_startingprice, auction_userid, auction_creationdate)  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", values,
         function(err, rows) {
 
             if(err) {
-                return done(err, 400);
+                return done("Bad request: This auction may already exist.", 400);
             }
+
             let sql = "SELECT MAX(auction_id) AS auction_id FROM auction WHERE auction_categoryid = ? AND auction_title = ? AND " +
                 "auction_description = ? AND auction_startingdate = ? AND auction_endingdate = ? AND " +
                 "auction_reserveprice = ? AND auction_startingprice = ? AND auction_userid = ?";
@@ -140,10 +156,11 @@ exports.getSingleAuction = function(auctionId, done) {
             resultValues["categoryTitle"] = rows[0].categoryTitle;
             resultValues["title"] = rows[0].title;
             resultValues["reservePrice"] = rows[0].reservePrice;
-            resultValues["startDateTime"] = rows[0].startDateTime;
-            resultValues["endDateTime"] = rows[0].endDateTime;
+            resultValues["startDateTime"] = Date.parse(rows[0].startDateTime);
+            resultValues["endDateTime"] = Date.parse(rows[0].endDateTime);
             resultValues["description"] = rows[0].description;
-            resultValues["creationDateTime"] = rows[0].creationDateTime;
+            resultValues["creationDateTime"] = Date.parse(rows[0].creationDateTime);
+
 
         //Get the seller sql
 
@@ -226,7 +243,7 @@ exports.getSingleAuction = function(auctionId, done) {
                                         for (let i = 0; i < rows.length; i++) {
                                             let bid = {
                                                 "amount": rows[i].amount,
-                                                "datetime": rows[i].datetime,
+                                                "datetime": Date.parse(rows[i].datetime),
                                                 "buyerId": rows[i].buyerId,
                                                 "buyerUsername": rows[i].buyerUsername
                                             };
@@ -255,6 +272,9 @@ exports.updateInformation = function(auctionId, userId, values, done) {
             if (err) {
                 return done(err, 500);
             }
+            if(rows.length == 0) {
+                return done(err, 404);
+            }
 
             if (rows[0].auction_userid != userId) {
                 //TODO Add in assumptions.
@@ -264,7 +284,7 @@ exports.updateInformation = function(auctionId, userId, values, done) {
             //Check if the auction has finished
             //TODO Add in assumptions
 
-            let currentDate = Date.now();
+            let currentDate = datetime.create();
             let sql = `SELECT auction_startingdate, auction_endingdate FROM auction WHERE auction_id = "${auctionId}"`;
             db.get_pool().query(sql,
                 function(err, rows) {
@@ -274,7 +294,7 @@ exports.updateInformation = function(auctionId, userId, values, done) {
                     if (rows.length == 0) {
                         return done(err, 404);
                     }
-                    if (currentDate > rows[0].auction_endingdate) {
+                    if (currentDate > Date.parse(rows[0].auction_endingdate)) {
                         return done("Bad request: You may only update an auction that is currently active.", 400);
                     }
 
@@ -331,7 +351,23 @@ exports.getBids = function(auctionId, done) {
             if(rows.length == 0) {
                 return done(err, 404);
             }
-            return done(rows, 200);
+            else {
+                let bidList = [];
+                for (let i = 0; i < rows.length; i++) {
+
+
+                    let bid = {
+                        "amount": rows[i].amount,
+                        "datetime": Date.parse(rows[i].datetime),
+                        "buyerId": rows[i].buyerId,
+                        "buyerUsername": rows[i].buyerUsername
+                    };
+                    bidList[i] = bid;
+                }
+                return done(bidList, 200);
+
+            }
+
         });
 };
 
@@ -383,7 +419,8 @@ exports.makeBid = function(auctionId, userId, amount, done) {
                             }
 
                             //ELSE Insert bid into table
-                            let sql = `INSERT INTO bid (bid_userid, bid_auctionid, bid_amount, bid_datetime) VALUES ("${userId}", "${auctionId}", "${amount}", "${Date.now()}")`;
+                            let currentDate = datetime.create().format("Y-m-d H:M:S");
+                            let sql = `INSERT INTO bid (bid_userid, bid_auctionid, bid_amount, bid_datetime) VALUES ("${userId}", "${auctionId}", "${amount}", "${currentDate}")`;
                             db.get_pool().query(sql,
                                 function(err, rows) {
                                     if(err) {
