@@ -1,6 +1,7 @@
 const db = require("../../config/db");
 const fs = require('fs');
 const path = require('path');
+const findRemoveSync = require("find-remove");
 
 exports.resampleData = function(done) {
 
@@ -15,7 +16,7 @@ exports.resampleData = function(done) {
 
 exports.resetDatabase = function(done) {
 
-    findRemoveSync(path.resolve(_dirname + "/../photos"), {
+    findRemoveSync(path.resolve(__dirname + "/../photos"), {
         extensions: ['.png', '.jpeg'],
         ignore: 'default.png'
     });
