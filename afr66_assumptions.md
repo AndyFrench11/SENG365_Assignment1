@@ -6,6 +6,7 @@ and if they do, that they have deleted it previous to doing the post.
 2. In the POST /auctions/{id}/photos endpoint, I am assuming that the user inputs a valid photo for the auction,
 not an empty photo.
 3. In the POST and DELETE /auctions/{id}/photos endpoint, I am assuming that only the owner of the auction may add a photo to the auction.
+4. In the POST /auctions/{id}/photos endpoint, I am assuming that the user disables the "Content-Type" header.
 
 ##Auctions
 1. In the POST /auctions/{id}/bids endpoint, I am assuming that a user cannot bid on their own auction and
