@@ -168,6 +168,9 @@ exports.updateInformationOnAuction = function(req, res) {
                         } else if(errorCode == 500) {
                             res.statusMessage = "Internal server error";
                             res.status(500).send("Internal Server Error: There was a problem updating information in the database");
+                        } else if(errorCode == 401) {
+                            res.statusMessage = "Unauthorized";
+                            res.status(401).send("You are unauthorized to access this data.")
                         }
 
                     });
@@ -206,31 +209,40 @@ exports.makeBidForSingleAuction = function(req, res) {
         if(isAuthenticated) {
 
             let auctionId = req.params.auctionId;
-            let amount = req.query.amount;
-            let token = req.header("X-Authorization");
-            User.getUserIdFromToken(token, function (user_id, errorCode) {
-                if (errorCode == 500) {
-                    res.statusMessage = "Internal server error.";
-                    res.status(500).send(`Internal Server Error: A problem occurred getting information from the database.`);
-                } else {
+            let amount = null;
+            if(req.query.amount) {
+                amount = req.query.amount;
+                let token = req.header("X-Authorization");
+                User.getUserIdFromToken(token, function (user_id, errorCode) {
+                    if (errorCode == 500) {
+                        res.statusMessage = "Internal server error.";
+                        res.status(500).send(`Internal Server Error: A problem occurred getting information from the database.`);
+                    } else {
 
-                    Auction.makeBid(auctionId, user_id, amount, function(result, errorCode) {
-                        if(errorCode == 201) {
-                            res.statusMessage = "OK";
-                            res.status(201).send(`Bid of $${amount} successfully made on auction with id: ${auctionId} by user id: ${user_id}`);
-                        } else if(errorCode == 400) {
-                            res.statusMessage = "Bad Request";
-                            res.status(400).send(result);
-                        } else if(errorCode == 404) {
-                            res.statusMessage = "Not found";
-                            res.status(404).send("Not found: An auction with this id was not found.");
-                        } else if(errorCode == 500) {
-                            res.statusMessage = "Internal Server Error";
-                            res.status(500).send("Internal Server Error: A problem occurred at the database level.");
-                        }
-                    });
-                }
-            });
+                        Auction.makeBid(auctionId, user_id, amount, function(result, errorCode) {
+                            if(errorCode == 201) {
+                                res.statusMessage = "OK";
+                                res.status(201).send(`Bid of $${amount} successfully made on auction with id: ${auctionId} by user id: ${user_id}`);
+                            } else if(errorCode == 400) {
+                                res.statusMessage = "Bad Request";
+                                res.status(400).send(result);
+                            } else if(errorCode == 404) {
+                                res.statusMessage = "Not found";
+                                res.status(404).send("Not found: An auction with this id was not found.");
+                            } else if(errorCode == 500) {
+                                res.statusMessage = "Internal Server Error";
+                                res.status(500).send("Internal Server Error: A problem occurred at the database level.");
+                            }
+                        });
+                    }
+                });
+
+            } else {
+                res.statusMessage = "Bad Request";
+                res.status(400).send("Please input an amount to bid.");
+            }
+
+
 
 
         } else {

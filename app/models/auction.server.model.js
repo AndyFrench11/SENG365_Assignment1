@@ -74,8 +74,9 @@ exports.getAll = function(parameterValues, done) {
                         "currentBid": rows[i].currentBid
                     };
                     auctionList[i] = auction;
-                    return done(auctionList, 200);
+
                 }
+                return done(auctionList, 200);
             }
 
 
@@ -85,9 +86,10 @@ exports.getAll = function(parameterValues, done) {
 
 exports.create = function(values, done) {
 
+    let currentDate = datetime.create();
     if(values[3] > values[4]) {
         return done("Bad request: The end date time of the auction must be after the start date time", 400)
-    } else if(values[4] < Date.parse(values[8])) {
+    } else if(values[4] < currentDate) {
         return done("Bad request: The start date time of the auction must be after the current date time", 400)
     }
     let startDate = new Date(parseInt(values[3]));
@@ -269,6 +271,7 @@ exports.updateInformation = function(auctionId, userId, values, done) {
     let sql = `SELECT auction_userid FROM auction WHERE auction_id = "${auctionId}"`;
     db.get_pool().query(sql,
         function(err, rows) {
+            console.log("Got here 2");
             if (err) {
                 return done(err, 500);
             }
@@ -278,21 +281,23 @@ exports.updateInformation = function(auctionId, userId, values, done) {
 
             if (rows[0].auction_userid != userId) {
 
-                return done("Bad request: You must be the owner of the auction to update its information", 400);
+                return done(err, 401);
             }
 
             //Check if the auction has started
 
-            let currentDate = datetime.create();
-            let sql = `SELECT auction_startingdate, auction_endingdate, auction FROM auction WHERE auction_id = "${auctionId}"`;
+            let currentDate = Date.now();
+            let sql = `SELECT auction_startingdate, auction_endingdate, auction_creationdate FROM auction WHERE auction_id = "${auctionId}"`;
             db.get_pool().query(sql,
                 function(err, rows) {
+                    console.log("Got here 1");
                     if (err) {
                         return done(err, 500);
                     }
                     if (rows.length == 0) {
                         return done(err, 404);
                     }
+                    console.log("Got here");
                     if (currentDate > Date.parse(rows[0].auction_startingdate)) {
                         return done("Bad request: You may only update an auction if it hasn't started.", 400);
                     }
@@ -307,11 +312,6 @@ exports.updateInformation = function(auctionId, userId, values, done) {
                             return done("Bad request: The end date time of the auction must be after the start date time", 400)
                         }
 
-                    }
-                    if(values[3] > values[4]) {
-                        return done("Bad request: The end date time of the auction must be after the start date time", 400)
-                    } else if(values[4] < Date.parse(values[8])) {
-                        return done("Bad request: The end date time of the auction must be after the current date time", 400)
                     }
 
                     //Check if the bidding on the auction has already begun
@@ -395,6 +395,9 @@ exports.makeBid = function(auctionId, userId, amount, done) {
             if(err) {
                 return done(err, 500);
             }
+            if(rows.length == 0) {
+                return done(err, 404);
+            }
 
             if(rows[0].auction_userid == userId) {
                 return done("Bad request: You cannot bid on your own auction.", 400);
@@ -408,9 +411,6 @@ exports.makeBid = function(auctionId, userId, amount, done) {
                 function(err, rows) {
                     if(err) {
                         return done(err, 500);
-                    }
-                    if(rows.length == 0) {
-                        return done(err, 404);
                     }
                     if((currentDate < Date.parse(rows[0].auction_startingdate)) || (currentDate > Date.parse(rows[0].auction_endingdate))) {
                         return done("Bad request: You may only bid on an auction that has started and hasn't finished.", 400);

@@ -17,9 +17,10 @@ exports.addPhotoToAuction = function(req, res) {
                         Photo.addPhoto(user_id, auction_id, function (result, errorCode) {
                             if (errorCode == 404) {
                                 res.statusMessage = "Not found";
-                                res.status(404).send(`Not found: Could not find photo to add to auction ${auction_id}`);
+                                res.status(404).send(result);
                             } else if (errorCode == 201) {
                                 try {
+                                    //console.log("hello");
                                     req.pipe(fs.createWriteStream(`./app/photos/${auction_id}.png`));
                                     res.statusMessage = "OK";
                                     res.status(201).send(`Successfully added photo to auction ${auction_id}`);
@@ -66,7 +67,7 @@ exports.getSinglePhotoFromAuction = function(req, res) {
             res.status(404).end(result);
         } else if(errorCode == 400){
            res.statusMessage = "Bad request";
-           res.status(200).send("Bad request: A bad request was sent from the user.");
+           res.status(400).send("Bad request: A bad request was sent from the user.");
         } else if(errorCode == 500) {
             res.statusMessage = "Internal Server Error.";
             res.status(500).send("Internal server error: A problem occurred at the server.");
@@ -91,7 +92,7 @@ exports.deleteAuctionPhoto = function(req, res) {
                     Photo.deletePhoto(user_id, auction_id, function (result, errorCode) {
                         if (errorCode == 404) {
                             res.statusMessage = "Not found";
-                            res.status(404).send(`Not found: Could not find photo in auction ${auction_id}`);
+                            res.status(404).send(result);
                         } else if (errorCode == 201) {
                             res.statusMessage = "OK";
                             res.status(201).send(`Successfully removed photo from auction ${auction_id}`);
@@ -104,9 +105,6 @@ exports.deleteAuctionPhoto = function(req, res) {
                         } else if (errorCode == 401) {
                             res.statusMessage = "Unauthorized";
                             res.status(401).send("You are unauthorized to delete a photo to this auction.")
-                        } else if(errorCode == 402) {
-                            res.statusMessage = "Bad Request";
-                            res.status(402).send("You must create an auction first");
                         }
 
                     });

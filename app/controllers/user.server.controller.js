@@ -29,43 +29,50 @@ exports.userById = function(req, res) {
 };
 
 exports.create = function(req, res) {
-    let user_data = {
-        "username": req.body.username,
-        "givenName": req.body.givenName,
-        "familyName": req.body.familyName,
-        "email": req.body.email,
-        "password": req.body.password
-    };
+    try{
+        let user_data = {
+            "username": req.body.username,
+            "givenName": req.body.givenName,
+            "familyName": req.body.familyName,
+            "email": req.body.email,
+            "password": req.body.password
+        };
 
-    let username = user_data['username'].toString();
-    let givenName = user_data['givenName'].toString();
-    let familyName = user_data['familyName'].toString();
-    let email = user_data['email'].toString();
-    let password = user_data['password'].toString();
+        let username = user_data['username'].toString();
+        let givenName = user_data['givenName'].toString();
+        let familyName = user_data['familyName'].toString();
+        let email = user_data['email'].toString();
+        let password = user_data['password'].toString();
 
-    let values = [
-        [username],
-        [givenName],
-        [familyName],
-        [email],
-        [password]
-    ];
+        let values = [
+            [username],
+            [givenName],
+            [familyName],
+            [email],
+            [password]
+        ];
 
-    User.insert(values, function(result, errorCode) {
-        if(errorCode == 200) {
+        User.insert(values, function(result, errorCode) {
+            if(errorCode == 200) {
 
-            res.statusMessage = "OK";
-            res.status(201).send(result);
-        } else if(errorCode == 400) {
+                res.statusMessage = "OK";
+                res.status(201).send(result);
+            } else if(errorCode == 400) {
+                res.statusMessage = "Malformed Request";
+                res.status(400).send("Malformed Request: Could not create user (user may already exist.)");
 
-            res.statusMessage = "Malformed Request";
-            res.status(400).send("Malformed Request: Could not create user (user may already exist.)");
 
-        } else if(errorCode == 500) {
-            res.statusMessage = "Internal Server";
-            res.status(500).send("Internal Server Error: There was a problem creating the user.")
-        }
-    });
+            } else if(errorCode == 500) {
+                res.statusMessage = "Internal Server";
+                res.status(500).send("Internal Server Error: There was a problem creating the user.")
+            }
+        });
+    } catch(Error) {
+        console.log("CHECK");
+        res.statusMessage = "Malformed Request";
+        res.status(400).send("Malformed Request: Could not create user (user may already exist.)");
+    }
+
 };
 
 exports.changeDetails = function(req,res) {

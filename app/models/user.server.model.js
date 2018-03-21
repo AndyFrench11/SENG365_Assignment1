@@ -77,9 +77,12 @@ exports.sendLoginDetails = function(values, done) {
 
     let sql = `SELECT (${selectString}, user_id) FROM auction_user WHERE ${valueString}`;
 
-    db.get_pool().query(`SELECT (user_id) FROM auction_user WHERE ${valueString}`,
+    db.get_pool().query(`SELECT user_id, user_password FROM auction_user WHERE ${valueString}`,
         function(err, rows) {
             if((err) || rows.length == 0) {
+                return done(err, 400);
+            }
+            if(rows[0].user_password !== values["user_password"]) {
                 return done(err, 400);
             }
             console.log(rows);

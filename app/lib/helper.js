@@ -27,11 +27,3 @@ exports.checkIsUser = function(userId, req, res, done) {
 
 
 };
-
-// exports.checkIsValidJSON = function(req, res, done) {
-//     if(isJSON(req.body), true) {
-//         return done(true);
-//     } else {
-//         return done(false);
-//     }
-// };

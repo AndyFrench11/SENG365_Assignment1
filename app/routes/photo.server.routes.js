@@ -6,9 +6,5 @@ module.exports = function(app) {
         .post(photos.addPhotoToAuction)
         .delete(photos.deleteAuctionPhoto);
 
-    // app.route('/api/v1/auctions/:auctionId/photos/:photoId')
-    //     .get(photos.getSinglePhotoFromAuction)
-    //     .put(photos.updatePhotoFromAuction)
-
 
 };
