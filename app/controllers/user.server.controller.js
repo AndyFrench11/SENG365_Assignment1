@@ -92,7 +92,7 @@ exports.changeDetails = function(req,res) {
             if(req.body.password) {
                 values["user_password"] = req.body.password;
             }
-
+            //TODO check if user is authenticated user.
 
             User.update(userId, values, function(result, errorCode) {
                 if(errorCode == 200) {
