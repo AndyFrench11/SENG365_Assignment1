@@ -1,4 +1,5 @@
 const users = require("../models/user.server.model");
+const isJSON = require('is-json');
 
 
 exports.checkAuthenticated = function(req, res, done) {
@@ -26,3 +27,11 @@ exports.checkIsUser = function(userId, req, res, done) {
 
 
 };
+
+// exports.checkIsValidJSON = function(req, res, done) {
+//     if(isJSON(req.body), true) {
+//         return done(true);
+//     } else {
+//         return done(false);
+//     }
+// };

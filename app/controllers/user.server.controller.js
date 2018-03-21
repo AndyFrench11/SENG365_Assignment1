@@ -1,5 +1,6 @@
 const User = require("../models/user.server.model");
 const lib = require("../lib/helper");
+const isJSON = require('is-valid-json');
 
 exports.userById = function(req, res) {
     lib.checkAuthenticated(req, res, function(isAuthenticated) {
@@ -68,46 +69,56 @@ exports.create = function(req, res) {
 };
 
 exports.changeDetails = function(req,res) {
-    lib.checkAuthenticated(req,res, function(isAuthenticated) {
-        if(isAuthenticated) {
-            let userId = req.params.userId;
-            let values = {};
+        lib.checkAuthenticated(req,res, function(isAuthenticated) {
+            if(isAuthenticated) {
+                let userId = req.params.userId;
+                lib.checkIsUser(userId, req, res, function(isUser)  {
+                    if(isUser === true) {
+                        let values = {};
 
-            if(req.body.username) {
-                values["user_username"] = req.body.username;
+                        if(req.body.username) {
+                            values["user_username"] = req.body.username;
+                        }
+
+                        if(req.body.givenName) {
+                            values["user_givenname"] = req.body.givenName;
+                        }
+
+                        if(req.body.familyName) {
+                            values["user_familyname"] = req.body.familyName;
+                        }
+
+                        if(req.body.email) {
+                            values["user_email"] = req.body.email;
+                        }
+
+                        if(req.body.password) {
+                            values["user_password"] = req.body.password;
+                        }
+                        console.log("YES");
+                        User.update(userId, values, function(result, errorCode) {
+                            if(errorCode == 200) {
+                                res.statusMessage = "OK";
+                                res.status(201).send(`Updated user with id: ${userId} successfully.`);
+                            } else{
+                                res.statusMessage = "Internal server error";
+                                res.status(500).send("There was a server error updating the user.");
+                            }
+                        });
+
+
+                    } else {
+                        res.statusMessage = "Unauthorized";
+                        res.status(401).send("You are unauthorized to access this data.")
+                    }
+                });
+
+            } else {
+                res.statusMessage = "Unauthorized";
+                res.status(401).send("You are unauthorized to access this data.")
             }
-
-            if(req.body.givenName) {
-                values["user_givenname"] = req.body.givenName;
-            }
-
-            if(req.body.familyName) {
-                values["user_familyname"] = req.body.familyName;
-            }
-
-            if(req.body.email) {
-                values["user_email"] = req.body.email;
-            }
-
-            if(req.body.password) {
-                values["user_password"] = req.body.password;
-            }
-            //TODO check if user is authenticated user.
-
-            User.update(userId, values, function(result, errorCode) {
-                if(errorCode == 200) {
-                    res.statusMessage = "OK";
-                    res.status(201).send(`Updated user with id: ${userId} successfully.`);
-                } else{
-                    res.statusMessage = "Internal server error";
-                    res.status(500).send("There was a server error updating the user.");
-                }
             });
-        } else {
-            res.statusMessage = "Unauthorized";
-            res.status(401).send("You are unauthorized to access this data.")
-        }
-    })
+
 
 };
 

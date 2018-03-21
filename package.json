@@ -9,6 +9,8 @@
     "express": "^4.15.3",
     "find-remove": "^1.2.0",
     "fs": "0.0.1-security",
+    "is-json": "^2.0.1",
+    "is-valid-json": "^1.0.2",
     "mysql": "^2.15.0",
     "node-datetime": "^2.0.6",
     "path": "^0.12.7"

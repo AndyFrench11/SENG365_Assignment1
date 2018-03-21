@@ -97,7 +97,7 @@ exports.deleteAuctionPhoto = function(req, res) {
                             res.status(201).send(`Successfully removed photo from auction ${auction_id}`);
                         } else if (errorCode == 400) {
                             res.statusMessage = "Bad Request";
-                            res.status(400).send(`Bad Request: A bad request was sent by the user (there may already be a photo for this auction)`);
+                            res.status(400).send(result);
                         } else if (errorCode == 500) {
                             res.statusMessage = "Internal server error.";
                             res.status(500).send(`Internal Server Error: A problem occurred getting information from the database.`);
