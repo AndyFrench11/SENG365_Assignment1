@@ -73,6 +73,7 @@ exports.getSinglePhotoFromAuction = function(req, res) {
             res.status(500).send("Internal server error: A problem occurred at the server.");
         } else if(errorCode == 200) {
             res.statusMessage = "OK";
+            res.contentType('image/png');
             res.status(200).end(result);
         }
     });

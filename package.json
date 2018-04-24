@@ -6,6 +6,7 @@
   },
   "dependencies": {
     "body-parser": "^1.17.2",
+    "email-validator": "^2.0.3",
     "express": "^4.15.3",
     "find-remove": "^1.2.0",
     "fs": "0.0.1-security",

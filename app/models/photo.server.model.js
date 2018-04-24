@@ -68,7 +68,7 @@ exports.getSinglePhoto = function(auction_id, done) {
                                 if(err) {
                                     return done(err,500);
                                 }
-                                return done(result, 404);
+                                return done(result, 200);
                             });
                     } else {
                         fs.readFile(`./app/photos/${auction_id}.png`,

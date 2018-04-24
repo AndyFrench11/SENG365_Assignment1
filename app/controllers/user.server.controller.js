@@ -1,6 +1,7 @@
 const User = require("../models/user.server.model");
 const lib = require("../lib/helper");
 const isJSON = require('is-valid-json');
+const validator = require("email-validator");
 
 exports.userById = function(req, res) {
     lib.checkAuthenticated(req, res, function(isAuthenticated) {
@@ -52,23 +53,28 @@ exports.create = function(req, res) {
             [password]
         ];
 
-        User.insert(values, function(result, errorCode) {
-            if(errorCode == 200) {
+        let validEmail = validator.validate(email);
+        if(validEmail && password.length > 0) {
+            User.insert(values, function(result, errorCode) {
+                if(errorCode == 200) {
+                    res.statusMessage = "OK";
+                    res.status(201).send(result);
+                } else if(errorCode == 400) {
+                    res.statusMessage = "Malformed Request";
+                    res.status(400).send("Malformed Request: Could not create user (user may already exist.)");
 
-                res.statusMessage = "OK";
-                res.status(201).send(result);
-            } else if(errorCode == 400) {
-                res.statusMessage = "Malformed Request";
-                res.status(400).send("Malformed Request: Could not create user (user may already exist.)");
 
+                } else if(errorCode == 500) {
+                    res.statusMessage = "Internal Server";
+                    res.status(500).send("Internal Server Error: There was a problem creating the user.")
+                }
+            });
+        } else {
+            res.statusMessage = "Malformed Request";
+            res.status(400).send("Malformed Request: Could not create user (bad email address.)");
+        }
 
-            } else if(errorCode == 500) {
-                res.statusMessage = "Internal Server";
-                res.status(500).send("Internal Server Error: There was a problem creating the user.")
-            }
-        });
     } catch(Error) {
-        console.log("CHECK");
         res.statusMessage = "Malformed Request";
         res.status(400).send("Malformed Request: Could not create user (user may already exist.)");
     }

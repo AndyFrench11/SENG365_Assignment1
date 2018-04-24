@@ -89,8 +89,12 @@ exports.create = function(values, done) {
     let currentDate = datetime.create();
     if(values[3] > values[4]) {
         return done("Bad request: The end date time of the auction must be after the start date time", 400)
-    } else if(values[4] < currentDate) {
-        return done("Bad request: The start date time of the auction must be after the current date time", 400)
+    }
+    // else if(values[4] < currentDate) {
+    //     return done("Bad request: The start date time of the auction must be after the current date time", 400)
+    // }
+    else if(values[3] <= 0) {
+        return done("Bad request: The start date time must be after 1 January 1970", 400);
     }
     let startDate = new Date(parseInt(values[3]));
     startDate = datetime.create(startDate).format('Y-m-d H:M:S');

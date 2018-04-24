@@ -5,15 +5,16 @@ exports.getSingleUser = function(isUser, userId, done) {
         db.get_pool().query("SELECT user_username AS username, user_givenname AS givenName, user_familyname AS familyName," +
             "user_email AS email, user_accountbalance AS accountBalance, user_reputation AS reputation FROM auction_user WHERE user_id = ?", userId,
             function(err, rows){
+            console.log(rows);
                 if((err) || (rows.length == 0)) return done(err, true);
-                return done(rows, false);
+                return done(rows[0], false);
             });
     } else {
         db.get_pool().query("SELECT user_username AS username, user_givenname AS givenName, user_familyname AS familyName," +
             " user_reputation AS reputation FROM auction_user WHERE user_id = ?", userId,
             function(err, rows){
                 if((err) || (rows.length == 0)) return done(err, true);
-                return done(rows, false);
+                return done(rows[0], false);
             });
     }
 
