@@ -39,13 +39,13 @@ exports.createAuction = function(req, res) {
                         "startingBid": req.body.startingBid
                     };
 
-                    let categoryId = auction_data['categoryId'].toString();
-                    let title = auction_data['title'].toString();
-                    let description = auction_data['description'].toString();
-                    let startDateTime = auction_data['startDateTime'].toString();
-                    let endDateTime = auction_data['endDateTime'].toString();
-                    let reservePrice = auction_data['reservePrice'].toString();
-                    let startingBid = auction_data['startingBid'].toString();
+                    let categoryId = auction_data['categoryId'];
+                    let title = auction_data['title'];
+                    let description = auction_data['description'];
+                    let startDateTime = auction_data['startDateTime'];
+                    let endDateTime = auction_data['endDateTime'];
+                    let reservePrice = auction_data['reservePrice'];
+                    let startingBid = auction_data['startingBid'];
 
                     let currentDate = datetime.create().format("Y-m-d H:M:S");
                     console.log(currentDate);

@@ -103,6 +103,7 @@ exports.create = function(values, done) {
         function(err, rows) {
 
             if(err) {
+                console.log(err);
                 return done("Bad request: This auction may already exist.", 400);
             }
 
@@ -112,6 +113,7 @@ exports.create = function(values, done) {
             db.get_pool().query(sql, values,
                 function(err, rows) {
                     if((err) || (rows.length == 0)) {
+                        console.log(err);
                         return done(err, 500);
                     }
                     console.log(rows);

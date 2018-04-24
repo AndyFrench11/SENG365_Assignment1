@@ -132,16 +132,16 @@ exports.changeDetails = function(req,res) {
 exports.login = function(req, res) {
     let isValidRequest = false;
     let values = {};
-    if(req.body.username) {
-        values["user_username"] = req.body.username;
+    if(req.query.username) {
+        values["user_username"] = req.query.username;
     }
-    if(req.body.email) {
-        values["user_email"] = req.body.email;
+    if(req.query.email) {
+        values["user_email"] = req.query.email;
     }
-    if(req.body.password) {
-        values["user_password"] = req.body.password;
+    if(req.query.password) {
+        values["user_password"] = req.query.password;
     }
-    if(((req.body.username) || (req.body.email)) && req.body.password) {
+    if(((req.query.username) || (req.query.email)) && req.query.password) {
         isValidRequest = true;
     }
     if(isValidRequest) {
